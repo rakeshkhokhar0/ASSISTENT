@@ -74,7 +74,7 @@ Model-agnostic design (Ollama now, cloud models later)
 
     app.py                 # Application entry point
     taskmanager.py         # Command handling and orchestration
-     planner.py             # AI-assisted day planning logic
+    planner.py             # AI-assisted day planning logic
     model_interface.py     # Local/remote model integration
     command.py             # Command parsing and definitions
     database.py            # Database helpers and queries
