@@ -107,7 +107,7 @@ done
 status
 day end
 
-
+project is not completed yet
 AI planning always requires explicit user confirmation before tasks are saved.
 
 ## Design Principles
