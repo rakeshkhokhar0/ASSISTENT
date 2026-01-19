@@ -66,23 +66,22 @@ Clear separation of concerns:
     planner → AI planning logic
     model_interface → model integration
     database → persistence layer
-    
+
 Easy to extend or replace components
 Model-agnostic design (Ollama now, cloud models later)
 
 ## Project Structure
-.
-├── app.py                 # Application entry point
-├── taskmanager.py         # Command handling and orchestration
-├── planner.py             # AI-assisted day planning logic
-├── model_interface.py     # Local/remote model integration
-├── command.py             # Command parsing and definitions
-├── database.py            # Database helpers and queries
-├── database_connection.py # SQLite connection management
-├── help.py                # Help and command documentation
-└── README.md
 
-🚀 Getting Started
+    app.py                 # Application entry point
+    taskmanager.py         # Command handling and orchestration
+     planner.py             # AI-assisted day planning logic
+    model_interface.py     # Local/remote model integration
+    command.py             # Command parsing and definitions
+    database.py            # Database helpers and queries
+    database_connection.py # SQLite connection management
+    help.py                # Only for testing purposes
+    README.md
+
 ## Prerequisites
 
 Python 3.9+
@@ -95,10 +94,6 @@ https://ollama.com
 Pull a model:
 
 ollama pull phi3:mini
-
-▶️ Running the Application
-
-
 
 The application runs in interactive command mode.
 
@@ -118,37 +113,24 @@ AI planning always requires explicit user confirmation before tasks are saved.
 ## Design Principles
 
 AI suggests, user decides
-
 No silent state changes
-
 No automatic task execution
-
 Defensive validation of model output
-
 Offline usability first
-
 Simple, readable logic over automation
 
 ## Future Enhancements
 
 User profile–aware planning
-
 Carry-over logic for unfinished tasks
-
 Progress analytics and summaries
-
 Notifications and reminders
-
 Optional cloud model support
-
 UI or Telegram bot interface
-
-
 
 ## Installation
 
 python app.py
-
 
 ## License
 
