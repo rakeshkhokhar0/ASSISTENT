@@ -13,6 +13,7 @@ INSERT INTO tasks (session_id,task_name,priority,planned_start,planned_end,statu
 
 UPDATE tasks SET status='PENDING' 
 WHERE  session_id=2;
+ALTER TABLE tasks RENAME COLUMN priority TO order
 -- INSERT INTO tasks(session_id,task_name,planned_start,planned_end,status)
 --             values(?,?,?,?,?)
 --             """,(
@@ -21,3 +22,19 @@ WHERE  session_id=2;
 --                 task['planned_start'],
 --                 task['planned_end'],
 --                 task['status']
+
+
+CREATE TABLE IF NOT EXISTS tasks(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER,
+            task_name TEXT,
+            description TEXT,
+            order INTEGER,
+            actual_start TEXT,
+            actual_end TEXT,
+            pause_start TEXT,
+            pause_reason TEXT,
+            total_pause INTEGER DEFAULT 0,
+            time TEXT,
+            status TEXT,
+            FOREIGN KEY(session_id) REFERENCES day_session(id)

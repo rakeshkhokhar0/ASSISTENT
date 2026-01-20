@@ -1,7 +1,7 @@
 import sqlite3
 
 DB_NAME = "assistient.db"
-class DatabseConnection:
+class DatabaseConnection:
     def __init__(self) -> None:
         self.conn = None
 

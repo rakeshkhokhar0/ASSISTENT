@@ -1,6 +1,6 @@
 from typing import List,Dict,Optional,Tuple
 from datetime import datetime
-from appdatabase.database_connection import DatabseConnection as db
+from appdatabase.database_connection import DatabaseConnection as db
 
 
 def create_tables()-> None:
@@ -44,14 +44,13 @@ def create_tables()-> None:
             session_id INTEGER,
             task_name TEXT,
             description TEXT,
-            priority INTEGER,
-            planned_start TEXT,
-            planned_end TEXT,
+            order_by INTEGER DEFAULT 0,
             actual_start TEXT,
             actual_end TEXT,
             pause_start TEXT,
             pause_reason TEXT,
             total_pause INTEGER DEFAULT 0,
+            time TEXT,
             status TEXT,
             FOREIGN KEY(session_id) REFERENCES day_session(id)
             )  
@@ -148,13 +147,14 @@ def insert_task(task) -> None:
     with db() as cursor:
         cursor.execute(
             """
-            INSERT INTO tasks(session_id,task_name,planned_start,planned_end,status)
+            INSERT INTO tasks(session_id,task_name,description,order,time,status)
             values(?,?,?,?,?)
             """,(
                 task['session_id'],
-                task['task_name'],
-                task['planned_start'],
-                task['planned_end'],
+                task['name'],
+                task["description"],
+                task["order"],
+                task['time'],
                 task['status']
             )
         )

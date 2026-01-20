@@ -3,6 +3,7 @@ Track tasks in real time
 """
 from datetime import datetime
 import appdatabase.database as db
+from planner import generate_day_plan,modify_day_plan
 
 HELP_TEXT = """
 Available Commands:
@@ -28,13 +29,159 @@ Information:
 Help:
 - help             : Show this help message
 """.strip()
+# which question we are on
+global PLANNING_STEP,PENDING_PLAN,PENDING_CONFIRMATION_TASK_ID,PLAN_MODIFICATION_MODE
+PLANNING_STEP = None
+# collect users response
+PLANNING_CONTEXT = {}
+# model generated plan waiting for yes or no 
+PENDING_PLAN = None
+#flag for modify plan
+PLAN_MODIFICATION_MODE = False
 
-global PENDING_CONFIRMATION_TASK_ID 
 PENDING_CONFIRMATION_TASK_ID = None
+
 def handle_command(command, payload):
     """
     main entry point to handle all commands
     """
+    global PLANNING_STEP
+    global PENDING_PLAN
+    global PLAN_MODIFICATION_MODE
+    global PLANNING_CONTEXT
+    if PLANNING_STEP is not None:
+        user_input = payload if payload else command.lower()
+        if PLANNING_STEP == 1:
+            PLANNING_CONTEXT["goal"] = user_input
+            PLANNING_STEP  = 2
+            return ("OK"," How many hours are available today?")
+        
+        if PLANNING_STEP == 2:
+            try:
+                hours = float(user_input)
+                if hours <= 0:
+                    raise ValueError
+            except ValueError:
+                return ("ERROR","Please enter a valid number of hours.")
+            
+            PLANNING_CONTEXT['time_hours'] = hours
+            PLANNING_STEP = 3
+            return ("OK","Preferred intensity? (light / normal / deep) ")
+        
+        if PLANNING_STEP == 3:
+            intensity = user_input.lower()
+            if intensity not in ("light","normal","deep"):
+                return ("ERROR","Choose: light, normal, or deep")
+            
+            PLANNING_CONTEXT['intensity'] = intensity
+            PLANNING_STEP = 4
+
+            return ("OK","Should unfinished task be prioritized (yes / no)...")
+        
+        if PLANNING_STEP == 4:
+            prefer = user_input.lower()
+            if prefer not in ("yes","no"):
+                return ("ERROR","Please answer yes or no")
+            
+            if prefer == "yes":
+                last_active_session = db.get_last_closed_session()
+                unfinished = db.get_pending_tasks_by_priority(last_active_session[0])
+                PLANNING_CONTEXT['unfinished_tasks'] = [task[2] for task in unfinished]
+
+            else:
+                PLANNING_CONTEXT["unfinished_tasks"] = []
+
+            plan = generate_day_plan(PLANNING_CONTEXT)
+
+            if not plan:
+                reset_planning_state()
+                return ("ERROR","Planning failed. Please try again")
+            PENDING_PLAN = plan
+            PLANNING_STEP = None
+
+            preview = "\n".join(f"{t['order']}. {t["name"]}" for t in plan)
+
+            return ("OK",f"Here is your plan for today:\n\n {preview}\n\n confirm your plan (confirm / modify / discard)...")
+        
+
+    if command == "CONFIRM":
+        
+        active_session = db.get_active_session()
+        if not active_session:
+            reset_planning_state()
+            return ("ERROR","No active day. Start day first.")
+        
+        # global PENDING_PLAN
+        if not PENDING_PLAN:#type: ignore
+            return ("ERROR","Plan day first.")
+        
+
+        session_id = active_session[0]
+        for task in PENDING_PLAN:#type: ignore
+            task['session_id'] = session_id
+            task['status'] = "PENDING"
+            db.insert_task(task)
+
+        reset_planning_state()
+        return ("OK","Plan saved successfully. Use start <task name> to begin.")
+
+    if command == "MODIFY":
+        active_session = db.get_active_session()
+        if not active_session:
+            reset_planning_state()
+            return ("ERROR","No active day. Start day first.")
+        
+        # global PENDING_PLAN
+        if not PENDING_PLAN:#type: ignore
+            return ("ERROR","Plan day first.")
+        PLAN_MODIFICATION_MODE = True
+        return (
+            "OK",
+            "What would you like to change?\n"
+            "You can say things like:\n"
+            "- remove a task\n"
+            "- add more practice\n"
+            "- change learning order\n"
+            "- make the plan lighter or heavier"
+        )
+
+
+    if command == "DISCARD":
+        active_session = db.get_active_session()
+        if not active_session:
+            reset_planning_state()
+            return ("ERROR","No active day. Start day first.")
+        
+        # global PENDING_PLAN
+        if not PENDING_PLAN:#type: ignore
+            return ("ERROR","Plan day first.")
+        
+        reset_planning_state()
+        return ("OK","Plan discarded. You can plan again.")
+    
+    
+    if PLAN_MODIFICATION_MODE:#type: ignore
+        instruction = payload if payload else command.lower()
+
+        new_plan = modify_day_plan(
+            PENDING_PLAN,#type:ignore
+            instruction,
+            PLANNING_CONTEXT#type:ignore
+        )
+
+        if not new_plan:
+            PLAN_MODIFICATION_MODE = False
+            return ("ERROR","Could not modify the plan. Please try again.")
+        
+        PENDING_PLAN = new_plan
+        PLAN_MODIFICATION_MODE = False
+        preview = "\n".join(f"{task['order']}. {task['name']} {task['time']}\n{task['description']}" for task in PENDING_PLAN)
+
+        return ("OK",f"Updated plan: {preview}\n\n""Confirm this plan (confirm / modify / discard)")
+
+
+
+
     global PENDING_CONFIRMATION_TASK_ID
     if command == 'HELP':
         return ("OK ",HELP_TEXT)
@@ -48,6 +195,20 @@ def handle_command(command, payload):
         session_id = db.start_day_session()
         return ("OK","Day started successfully.")
     
+    if command == "PLAN_DAY":
+        active_session = db.get_active_session()
+        if not active_session:
+            return ("ERROR","No active day, Start day first.")
+        
+        todays_task = db.get_tasks_by_session(active_session[0])
+        if todays_task:
+            return ("ERROR","Day already planned.")
+        
+        
+        PLANNING_STEP = 1
+        PLANNING_CONTEXT.clear()
+        return ("OK","What do you want to study or work today?")
+
     if command == "DAY_END":
         active_session = db.get_active_session()
         if not active_session:
@@ -420,3 +581,10 @@ def handle_command(command, payload):
         return ("OK","\n".join(session_task_list))
 
     return ("ERROR","Not implemented yet.")
+
+
+def reset_planning_state():
+    global PLANNING_CONTEXT,PENDING_PLAN,PLANNING_STEP
+    PLANNING_STEP = None
+    PLANNING_CONTEXT = {}
+    PENDING_PLAN = None

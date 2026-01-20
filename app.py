@@ -19,7 +19,8 @@ def main():
         user_text = input("> ")
 
         command, payload = parse_command(user_text)
-
+        print(command)
+        print(payload)
         status, message = handle_command(command, payload)
 
         print(message)

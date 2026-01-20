@@ -20,7 +20,7 @@ def parse_command(text:str):
         return ('YES',None)
     
     if text == 'no':
-        return ('NO',None)
+        return ('NO',"no")
     
     if text == 'done':
         return ('DONE',None)
@@ -41,8 +41,17 @@ def parse_command(text:str):
         task_name = text[7:].strip()
         return ('STATUS_TASK',task_name)
     
-    # if text == 'plan':
-    #     return ('PLAN',None)
+    if text == 'plan day':
+        return ('PLAN_DAY',None)
+    
+    if text == "modify":
+        return ('MODIFY',None)
+    
+    if text == "confirm":
+        return ("CONFIRM",None)
+    
+    if text == "discard":
+        return ("DISCARD",None)
     
     if text.startswith('start '):
         task_name = text[6:].strip()
