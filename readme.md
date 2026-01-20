@@ -107,7 +107,6 @@ done
 status
 day end
 
-
 AI planning always requires explicit user confirmation before tasks are saved.
 
 ## Design Principles
@@ -136,3 +135,7 @@ python app.py
 
 This project is intended for learning and personal use.
 You may adapt or extend it as needed.
+
+
+
+project is not completed yet
