@@ -1,7 +1,9 @@
 import requests
-
-TOKEN = "8439599259:AAEjghkawnP0kF5n9mdBDH0o9IuuEs4a-lY"
-CHAT_ID = "6651409150"
+from dotenv import load_dotenv
+import os
+load_dotenv()
+TOKEN = os.getenv("telegram_token")
+CHAT_ID = os.getenv("chat_id")
 
 msg = "Telegram bot connected successfully."
 
