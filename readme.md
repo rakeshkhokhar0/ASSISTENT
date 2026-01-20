@@ -129,7 +129,7 @@ UI or Telegram bot interface
 
 ## Installation
 
-python app.py
+project not completed yet
 
 ## License
 
